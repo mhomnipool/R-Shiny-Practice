@@ -95,6 +95,10 @@ comp_count_income
 
 barplot(Income_tbl, main = "Income Per Capita", horiz = TRUE, names.arg=Income_tbl$State)
 
+count_v_dispinc = ggplot(comp_count_income, aes(Count, Income.Per.Capita))+geom_point() +
+  geom_smooth() + ggtitle("Store Count vs Disposable Income", align = 'center')
+count_v_dispinc
+
 ```
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
