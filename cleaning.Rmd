@@ -8,25 +8,92 @@ This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
 
 ```{r}
+set.seed(100)
+#package notes
 install.packages('usmap')
-
 library(tidyverse)
 library(ggplot2)
 library(usmap)
 library(leaflet)
 library(plotly)
 
+#load initial starbucks data
 SB_raw <- read.csv("directory.csv", stringsAsFactors = FALSE)
 unique(SBUSA_raw$State.Province)
 
+#discard irrelevant data and save
 SBUSA_raw = filter(SB_raw, Country == "US")
 SBUSA_raw$Country = NULL
 write.csv(SBUSA_raw, "SBUSA_raw.csv")
 head(SBUSA_raw)
 
-plot_usmap(color = "black")
+#load income data and prep for merge
+Income_tbl <- read.csv('income.csv', stringsAsFactors = FALSE)
+Income_tbl$State = state.abb[match(Income_tbl$State, state.name)]
+Income_tbl[[1]][1] = 'DC'
+
+#prep and merge starbucks and income data by state; save
+SBUSA_raw = SBUSA_raw %>% rename(State = State.Province)
+SB_w_income = inner_join(SBUSA_raw, Income_tbl, by = 'State')
+write.csv(SB_w_income, "SB_w_income")
+
+head(SB_w_income)
+
+#condense ds to only location data
+SB_loc = SB_w_income %>% select(Latitude, Longitude)
 
 
+SB_w_income %>% summarise(mean(Income.Per.Capita))
+#$38,674.14
+
+
+#leaflet map
+sbmap <- leaflet(SB_loc) %>% addTiles('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+    attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>') %>% 
+  setView(-98.483330, 38.712046, zoom = 4) %>% 
+  addCircleMarkers(~Longitude, ~Latitude, popup=popup_content,
+  weight = 3, radius=2, color="#ffffff", stroke = F, fillOpacity = 0.8)  %>%
+  addLegend("bottomleft", colors= "#ffffff", labels="Starbucks Stores")
+sbmap
+#google has a hex color tool for above
+
+#popup information
+popup_content = paste0("Starbucks ", "#", SB_w_income$Store.Number, "<br/>",
+                       SB_w_income$Street.Address, "<br/>",
+                       SB_w_income$City, ", ", SB_w_income$State, " ",
+                       strtrim(as.character(SB_w_income$Postcode), 5),"<br/>",
+                       "<br/>",
+                       SB_w_income$State, 
+                       " PCI: ",paste("$",format(SB_w_income$Income.Per.Capita, 
+                                                 big.mark=","),'/y',sep=""), "<br/>",
+                       SB_w_income$comp.statement, "<br/>",
+                       "(adjusted for cost of living)")
+
+
+#comparative statement function
+higher_less = function(val){
+    if (val == 38674.14){
+      return ("equal to the national average")
+    } else if (val < 38674.14){
+      return (paste0("~", round((((38674.14 - val)/38674.14)*100), digits = 0), "% lower than the national average"))
+      
+    } else if (val > 38674.14){
+     return (paste0("~", round((((val - 38674.14)/38674.14)*100), digits = 0), "% higher than the national average"))
+    }
+}
+
+#create a new column with the appropriate statement
+SB_w_income['comp.statement'] = NA
+for (i in 1:length(SB_w_income$Income.Per.Capita)){
+  SB_w_income$comp.statement[[i]] = higher_less(SB_w_income$Income.Per.Capita[[i]])
+}
+
+state_count = as.data.frame(table(SB_w_income$State))
+state_count = state_count %>% rename(State = Var1, Count = Freq)
+comp_count_income = inner_join(state_count, Income_tbl, by = 'State')
+comp_count_income
+
+barplot(Income_tbl, main = "Income Per Capita", horiz = TRUE, names.arg=Income_tbl$State)
 
 ```
 
