@@ -31,12 +31,11 @@ shinyUI(dashboardPage(skin='green',
                     fluidPage(
                         fluidRow(column(offset = 2, width = 8, align = 'left', h1(tags$b(tags$u("Starbucks Stores in the US"))))),
                     ),
+                    br(),
+                    br(),
                     fluidPage(
                         fluidRow(column(offset = 2, width = 8, align = 'left', h5("click a store to view store information and discretionary income level"))),
                     ),
-                    br(),
-                    br(),
-                    br(),
                     leafletOutput('storemap', height = 500, width = 800)
                 )),
         tabItem(tabName = 'about',

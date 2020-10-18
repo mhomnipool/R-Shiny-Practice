@@ -7,16 +7,16 @@
 #    http://shiny.rstudio.com/
 #
 
-library(shiny)
-library(leaflet)
-library(tidyverse)
 
 
+#interactive leaflet map
 function (input, output, session){
     
     output$storemap = renderLeaflet({
         leaflet(SB_loc) %>% addTiles('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-                                    attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>') %>% 
+                                    attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, 
+                                    <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; 
+                                    Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>') %>% 
             setView(-98.483330, 38.712046, zoom = 4) %>% 
             addCircleMarkers(~Longitude, ~Latitude, popup=popup_content,
                              weight = 3, radius=2, color="#ffffff", stroke = F, fillOpacity = 0.8)  %>%
