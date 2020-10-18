@@ -48,14 +48,16 @@ SB_w_income %>% summarise(mean(Income.Per.Capita))
 
 
 #leaflet map
-sbmap <- leaflet(SB_loc) %>% addTiles('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-    attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>') %>% 
+sbmap <- leaflet(SB_loc) %>% addProviderTiles(provider = providers$CartoDB.Positron
+     #for a dark map use below code and change above arg to addTiles()                      
+     # ,attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    ) %>% 
   setView(-98.483330, 38.712046, zoom = 4) %>% 
   addCircleMarkers(~Longitude, ~Latitude, popup=popup_content,
-  weight = 3, radius=2, color="#ffffff", stroke = F, fillOpacity = 0.8)  %>%
-  addLegend("bottomleft", colors= "#ffffff", labels="Starbucks Stores")
+  weight = 3, radius=2.5, color="#3d9949", stroke = F, fillOpacity = 0.8)  %>%
+  addLegend("bottomleft", colors= "#3d9949", labels="Starbucks Stores")
 sbmap
-#google has a hex color tool for above
+#google "hex color tool" to pick your marker color(s)
 
 #popup information
 popup_content = paste0("Starbucks ", "#", SB_w_income$Store.Number, "<br/>",
@@ -70,7 +72,7 @@ popup_content = paste0("Starbucks ", "#", SB_w_income$Store.Number, "<br/>",
                        "(adjusted for cost of living)")
 
 
-#comparative statement function
+#comparative statement function for popup
 higher_less = function(val){
     if (val == 38674.14){
       return ("equal to the national average")
@@ -88,17 +90,45 @@ for (i in 1:length(SB_w_income$Income.Per.Capita)){
   SB_w_income$comp.statement[[i]] = higher_less(SB_w_income$Income.Per.Capita[[i]])
 }
 
+#variable - 2017 state disposable income per capita; data from Tax Foundation
 state_count = as.data.frame(table(SB_w_income$State))
 state_count = state_count %>% rename(State = Var1, Count = Freq)
+
+
+#comparing disposable income and store count
 comp_count_income = inner_join(state_count, Income_tbl, by = 'State')
 comp_count_income
 
-barplot(Income_tbl, main = "Income Per Capita", horiz = TRUE, names.arg=Income_tbl$State)
+#scatterplot - disp income vs store count
+plot_count_v_dispinc_raw = ggplot(comp_count_income, aes(Income.Per.Capita, Count)) + geom_point() +  geom_smooth() + ggtitle("Store Count vs Disposable Income by State") + xlab("Disposable Income per Capita") + ylab("Store Count")
+plot_count_v_dispinc_raw
 
-count_v_dispinc = ggplot(comp_count_income, aes(Count, Income.Per.Capita))+geom_point() +
-  geom_smooth() + ggtitle("Store Count vs Disposable Income", align = 'center')
-count_v_dispinc
+#correcting the above scatterplot for outliers
+plot_count_v_dispinc = ggplot(comp_count_income, aes(Income.Per.Capita, Count)) + geom_point() +
+  geom_smooth() + ggtitle("Count vs Income: Outliers Removed") + coord_cartesian(xlim = quantile(comp_count_income$Income.Per.Capita, c(0.1,0.9))) + coord_cartesian(ylim = quantile(comp_count_income$Count, c(0.1,0.9))) + xlab("Disposable Income per Capita") + ylab("Store Count")
+plot_count_v_dispinc
 
+#histograms of variables
+hist(comp_count_income$Count, breaks=20)
+hist(comp_count_income$Income.Per.Capita, breaks=20)
+hist((consumer_spending_2017$Spending), breaks=20)
+
+
+consumer_spending_2017
+
+hist((consumer_spending_2017$Spending), breaks=20)
+
+#variable - consumer spending by state in 2017; data from BEA
+consumer_spending_2017 = read.csv("consumer_spending.csv", stringsAsFactors = FALSE)
+consumer_spending_2017$State = state.abb[match(consumer_spending_2017$State, state.name)]
+consumer_spending_2017$State[[8]] = "DC"
+consumer_spending_2017
+
+#comparing store count to consumer spending
+comp_count_income_spending = inner_join(comp_count_income, consumer_spending_2017, by = 'State')
+#scatterplot - spending vs store count
+plot_count_vs_spending_raw = ggplot(comp_count_income_spending, aes(Spending, Count)) + geom_point() + geom_smooth(color='#3d9949')
+plot_count_vs_spending_raw
 ```
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.

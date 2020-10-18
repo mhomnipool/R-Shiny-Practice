@@ -10,22 +10,20 @@ shinyUI(dashboardPage(skin='green',
         tabItem(tabName = 'intro',
                 fluidPage(
                     fluidRow(column(offset = 2, width = 8, align = 'center', h1(tags$b(tags$u("Starbucks Store Placement"))))),
-                ),
-                fluidPage(
                     fluidRow(column(offset = 2, width = 8, align = 'center', h3("Income per Capita vs. Expansion in the US"))),
+                    br(),
+                    br(),
+                    fluidRow(
+                        column(width = 6, box(width = 12, background = 'black',
+                                              img(src = "beans.jpg", height = 170), align = 'center')),
+                        column(width = 6, box(width = 12, h2(tags$u(tags$b('Hypothesis'))), background = 'olive',
+                                              p("It is easy to theorize that income per capita would have a positive correlation with the
+                                          number of Starbucks stores in a given state, that Starbucks corporate would want to place
+                                          stores near populations with higher disposable incomes and refrain from placing stores
+                                          near populations with lower disposable incomes."))))
+                        )
                     
                 ),
-                br(),
-                br(),
-                fluidPage(
-                    fluidRow(column(offset = 2, width = 8, align = 'left', 
-                                    box(width = 12, h2(tags$u(tags$b('Hypothesis'))), background = 'olive',
-                                        p("It is easy to theorize that income per capita would have a positive correlation with the 
-                                          number of Starbucks stores in a given state, that Starbucks corporate would want to place
-                                          stores near populations with higher disposable incomes and refrain from placing stores 
-                                          near populations with lower disposable incomes.")
-                                        ))),
-                )),
         tabItem(tabName = 'stores',
                 fluidPage(
                     fluidPage(
