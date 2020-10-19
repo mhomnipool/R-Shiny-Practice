@@ -1,16 +1,7 @@
-#
-# This is the server logic of a Shiny web application. You can run the
-# application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
 
-
-
-#interactive leaflet map
 function (input, output, session){
+    
+    #interactive leaflet map
     
     output$storemap = renderLeaflet({
         leaflet(SB_loc) %>% addProviderTiles(provider = providers$CartoDB.Positron) %>% 
@@ -30,6 +21,7 @@ function (input, output, session){
                            "(adjusted for cost of living)", "<br/>",
                            "<br/>",
                            "Spending: ", SB_w_income$comp.statement.spending)
+    #Histograms
     
     output$hist_stores = renderPlot(hist(SB_w_income$Count, breaks=20, main = "Distribution of 
                                          Stores per State"))
@@ -39,15 +31,14 @@ function (input, output, session){
     
     output$hist_spend = renderPlot(hist(SB_w_income$Spending, breaks=20, main = "Distribution 
                                         of Consumer Spending"))
+    #Scatterplots
+    
     output$store_v_inc = renderPlot(
         ggplot(SB_w_income, aes(Count,Income.Per.Capita)) + geom_point() +  geom_smooth(color='#3d9949') 
         + ggtitle("Store Count vs Disposable Income by State") + ylab("Disposable Income per Capita") 
-        + xlab("Store Count")
-    )
+        + xlab("Store Count"))
     
     output$store_v_spend = renderPlot(ggplot(SB_w_income, aes(Spending, Count)) + geom_point() + 
                                           geom_smooth(color='#3d9949'))
-    
-    
-    
+
 }
