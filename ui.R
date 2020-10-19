@@ -20,21 +20,38 @@ shinyUI(dashboardPage(skin='green',
                                               p("It is easy to theorize that income per capita would have a positive correlation with the
                                           number of Starbucks stores in a given state, that Starbucks corporate would want to place
                                           stores near populations with higher disposable incomes and refrain from placing stores
-                                          near populations with lower disposable incomes."))))
+                                          near populations with lower disposable incomes.")))),
+                    fluidRow(
+                        column(width = 6, box(width =12, h2(tags$u(tags$b('Analysis'))), background = 'olive',
+                                              p("A simple comparison of disposable income per capita and the number of Starbucks stores in
+                                                a given state revealed no correlation. I thus expanded my dataset to
+                                                include consumer spending, thinking that perhaps individuals that are used to a high cost of
+                                                living might be more inclined to spend a greater percentage of their disposable income on coffee.
+                                                Additionally, I hoped to capture some measure of spending related to travel, as the Starbucks
+                                                name could easily attract travelers due to name recognition and consistency of product."))),
+                        column(width = 6, box(width = 12, background = 'black',
+                                              img(src = "grounds1.jpg", height = 209), align = 'center'))),
+                    fluidRow(
+                        column(width = 6, box(width = 12, background = 'black',
+                                              img(src = "coffee.jpg", height = 200), align = 'center')),
+                        column(width = 6, box(width = 12, h2(tags$u(tags$b('Conclusions'))), background = 'olive', 
+                                              p("Some things about the conclusion")))
+                        
+                    )
                         )
                     
                 ),
         tabItem(tabName = 'stores',
                 fluidPage(
                     fluidPage(
-                        fluidRow(column(offset = 2, width = 8, align = 'left', h1(tags$b(tags$u("Starbucks Stores in the US"))))),
+                        fluidRow(column(offset = 2, width = 8, align = 'center', h1(tags$b(tags$u("Starbucks Stores in the US"))))),
                     ),
                     br(),
                     br(),
                     fluidPage(
-                        fluidRow(column(offset = 2, width = 8, align = 'left', h5("click a store to view store information and discretionary income level"))),
+                        fluidRow(column(offset = 2, width = 8, align = 'center', h5("click a store for store information and relevant state data"))),
                     ),
-                    leafletOutput('storemap', height = 500, width = 800)
+                    column(width = 12, box(width = 12, background = 'olive', align = 'center', leafletOutput('storemap', height = 500, width = 800)))
                 )),
         tabItem(tabName = 'about',
                 fluidPage(
