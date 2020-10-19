@@ -1,0 +1,147 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+set.seed(100)
+#package notes
+install.packages('usmap')
+library(tidyverse)
+library(ggplot2)
+library(usmap)
+library(leaflet)
+library(plotly)
+
+#load initial starbucks data
+SB_raw <- read.csv("directory.csv", stringsAsFactors = FALSE)
+unique(SBUSA_raw$State.Province)
+
+#discard irrelevant data and save
+SBUSA_raw = filter(SB_raw, Country == "US")
+SBUSA_raw$Country = NULL
+write.csv(SBUSA_raw, "SBUSA_raw.csv")
+head(SBUSA_raw)
+
+#load income data and prep for merge
+Income_tbl <- read.csv('income.csv', stringsAsFactors = FALSE)
+Income_tbl$State = state.abb[match(Income_tbl$State, state.name)]
+Income_tbl[[1]][1] = 'DC'
+
+#prep and merge starbucks and income data by state; save
+SBUSA_raw = SBUSA_raw %>% rename(State = State.Province)
+SB_w_income = inner_join(SBUSA_raw, Income_tbl, by = 'State')
+write.csv(SB_w_income, "SB_w_income.csv")
+
+SB_w_income <- read.csv("SB_w_income.csv", stringsAsFactors = FALSE)
+
+head(SB_w_income)
+
+#condense ds to only location data
+SB_loc = SB_w_income %>% select(Latitude, Longitude)
+write.csv(SB_loc, "SB_loc")
+
+SB_w_income %>% summarise(mean(Income.Per.Capita))
+#38674.14
+
+
+########leaflet map
+
+sbmap <- leaflet(SB_loc) %>% addProviderTiles(provider = providers$CartoDB.Positron) %>% 
+     
+     #for a dark map use below code and change above arg to addTiles()                      
+     # ,attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+     
+     #google "hex color tool" to pick your marker color(s)
+  
+  setView(-98.483330, 38.712046, zoom = 4) %>% 
+  addCircleMarkers(~Longitude, ~Latitude, popup=popup_content,
+  weight = 3, radius=2.5, color="#3d9949", stroke = F, fillOpacity = 0.8)  %>%
+  addLegend("bottomleft", colors= "#3d9949", labels="Starbucks Stores")
+
+#popup information
+popup_content = paste0("Starbucks ", "#", SB_w_income$Store.Number, "<br/>",
+                       SB_w_income$Street.Address, "<br/>",
+                       SB_w_income$City, ", ", SB_w_income$State, " ",
+                       strtrim(as.character(SB_w_income$Postcode), 5),"<br/>",
+                       "<br/>",
+                       "Disposable Income:  ", SB_w_income$comp.statement.inc, "<br/>",
+                       "(adjusted for cost of living)", "<br/>",
+                       "<br/>",
+                       "Spending: ", SB_w_income$comp.statement.spending)
+
+
+SB_w_income = inner_join(SB_w_income, comp_count_income_spending, by = "State")
+
+#comparative statement function for popup
+higher_less = function(val,avg){
+    if (val == avg){
+      return ("equal to the national average")
+    } else if (val < avg){
+      return (paste0("~", round((((avg - val)/avg)*100), digits = 0), "% under nat avg"))
+      
+    } else if (val > avg){
+     return (paste0("~", round((((val - avg)/avg)*100), digits = 0), "% over nat avg"))
+    }
+}
+
+####### graphs
+#scatterplot - disp income vs store count
+plot_count_v_dispinc = ggplot(SB_w_income, aes(Count,Income.Per.Capita)) + geom_point() +  geom_smooth(color='#3d9949') + ggtitle("Store Count vs Disposable Income by State") + ylab("Disposable Income per Capita") + xlab("Store Count")
+plot_count_v_dispinc
+
+#histograms of variables
+hist_stores = hist(SB_w_income$Count, breaks=20, main = "Distribution of Stores per State")
+hist_inc = hist(SB_w_income$Income.Per.Capita, breaks=20, main = "Distribution of Disposable Income per Capita")
+hist_spend = hist(SB_w_income$Spending, breaks=20, main = "Distribution of Consumer Spending")
+
+#scatterplot - spending vs store count
+plot_count_vs_spending = ggplot(SB_w_income, aes(Count, Spending)) + geom_point() + geom_smooth(color='#3d9949') + xlab("Store Count")
+plot_count_vs_spending
+
+
+####misc data cleaning:
+
+#variable - consumer spending by state in 2017; data from BEA
+consumer_spending_2017 = read.csv("consumer_spending.csv", stringsAsFactors = FALSE)
+consumer_spending_2017$State = state.abb[match(consumer_spending_2017$State, state.name)]
+consumer_spending_2017$State[[8]] = "DC"
+consumer_spending_2017
+
+#create a new column with the appropriate statement
+comp_count_income_spending %>% summarise(mean(Spending)) #avg = 261439.1
+
+#comparing store count to consumer spending
+comp_count_income_spending = inner_join(comp_count_income, consumer_spending_2017, by = 'State')
+SB_w_income
+
+#creating comparison statement for popup
+comp_count_income_spending['comp.statement'] = NA
+for (i in 1:length(comp_count_income_spending$Spending)){
+  comp_count_income_spending$comp.statement[[i]] =
+    higher_less(comp_count_income_spending$Spending[[i]],as.numeric(261439.1))
+}
+
+#creating a comparison statement for popup
+for (i in 1:length(SB_w_income$Income.Per.Capita)){
+  SB_w_income$comp.statement[[i]] = higher_less(SB_w_income$Income.Per.Capita[[i]],as.numeric(38674.14))
+}
+
+#variable - 2017 state disposable income per capita; data from Tax Foundation
+state_count = as.data.frame(table(SB_w_income$State))
+state_count = state_count %>% rename(State = Var1, Count = Freq)
+
+#comparing disposable income and store count
+comp_count_income = inner_join(state_count, Income_tbl, by = 'State')
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
