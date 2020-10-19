@@ -1,5 +1,5 @@
 
-function (input, output, session){
+function(input, output, session){
     
     #interactive leaflet map
     
@@ -23,22 +23,18 @@ function (input, output, session){
                            "Spending: ", SB_w_income$comp.statement.spending)
     #Histograms
     
-    output$hist_stores = renderPlot(hist(SB_w_income$Count, breaks=20, main = "Distribution of 
-                                         Stores per State"))
+    output$hist_stores = renderPlot(hist(SB_w_income$Count, breaks=20, main = "Distribution of Stores per State", xlab = "Stores Per State"))
     
-    output$hist_inc = renderPlot(hist(SB_w_income$Income.Per.Capita, breaks=20, main = 
-                                          "Distribution of Disposable Income per Capita"))
+    output$hist_inc = renderPlot(hist(SB_w_income$Income.Per.Capita, breaks=20, main = "Distribution of Disposable Income per Capita", xlab = "Disposable Income per Capita"))
     
-    output$hist_spend = renderPlot(hist(SB_w_income$Spending, breaks=20, main = "Distribution 
-                                        of Consumer Spending"))
+    output$hist_spend = renderPlot(hist(SB_w_income$Spending, breaks=20, main = "Distribution of Consumer Spending", xlab = "Spending (M of dollars)"))
     #Scatterplots
     
     output$store_v_inc = renderPlot(
         ggplot(SB_w_income, aes(Count,Income.Per.Capita)) + geom_point() +  geom_smooth(color='#3d9949') 
-        + ggtitle("Store Count vs Disposable Income by State") + ylab("Disposable Income per Capita") 
-        + xlab("Store Count"))
+        + ylab("Disposable Income per Capita") + xlab("Store Count"))
     
-    output$store_v_spend = renderPlot(ggplot(SB_w_income, aes(Spending, Count)) + geom_point() + 
+    output$store_v_spend = renderPlot(ggplot(SB_w_income, aes(Count, Spending)) + geom_point() + xlab("Store Count") + ylab("Spending (M of dollars)") +
                                           geom_smooth(color='#3d9949'))
 
 }

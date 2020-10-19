@@ -100,7 +100,7 @@ hist_inc = hist(SB_w_income$Income.Per.Capita, breaks=20, main = "Distribution o
 hist_spend = hist(SB_w_income$Spending, breaks=20, main = "Distribution of Consumer Spending")
 
 #scatterplot - spending vs store count
-plot_count_vs_spending = ggplot(SB_w_income, aes(Spending, Count)) + geom_point() + geom_smooth(color='#3d9949')
+plot_count_vs_spending = ggplot(SB_w_income, aes(Count, Spending)) + geom_point() + geom_smooth(color='#3d9949') + xlab("Store Count")
 plot_count_vs_spending
 
 
@@ -138,8 +138,6 @@ state_count = state_count %>% rename(State = Var1, Count = Freq)
 #comparing disposable income and store count
 comp_count_income = inner_join(state_count, Income_tbl, by = 'State')
 
-
-str(SB_w_income)
 ```
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
